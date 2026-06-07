@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Password Strength Analyzer — Fatih Bilekyigit</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #f9f9f8;
+    color: #1a1a1a;
+    min-height: 100vh;
+    padding: 2rem 1rem 3rem;
+    display: flex;
+    justify-content: center;
+  }
+  .container { width: 100%; max-width: 720px; }
+  .header { text-align: center; margin-bottom: 2rem; }
+  .header-wrap { display: inline-flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+  .header-wrap i { font-size: 28px; color: #1a7ef0; }
+  .header h1 { font-size: 22px; font-weight: 500; color: #1a1a1a; }
+  .header p { font-size: 13px; color: #6b7280; margin-top: 4px; }
+  .card {
+    background: #ffffff;
+    border: 0.5px solid rgba(0,0,0,0.12);
+    border-radius: 12px;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1rem;
+  }
+  .input-label { font-size: 13px; color: #6b7280; margin-bottom: 6px; display: block; }
+  .input-row { display: flex; gap: 8px; align-items: center; }
+  .input-wrap { position: relative; flex: 1; }
+  input[type="password"], input[type="text"] {
+    width: 100%;
+    background: #ffffff;
+    border: 0.5px solid rgba(0,0,0,0.2);
+    border-radius: 8px;
+    padding: 10px 40px 10px 12px;
+    font-size: 15px;
+    font-family: 'Courier New', monospace;
+    color: #1a1a1a;
+    outline: none;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  input:focus { border-color: #1a7ef0; box-shadow: 0 0 0 3px rgba(26,126,240,.1); }
+  input::placeholder { color: #b0b7c3; font-family: -apple-system, sans-serif; font-size: 14px; }
+  .eye-btn {
+    position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+    background: none; border: none; cursor: pointer;
+    color: #9ca3af; font-size: 18px; padding: 0; line-height: 1; transition: color .2s;
+  }
+  .eye-btn:hover { color: #1a7ef0; }
+  .demo-btn {
+    background: transparent; border: 0.5px solid rgba(0,0,0,0.2);
+    border-radius: 8px; color: #1a1a1a; font-size: 13px;
+    padding: 10px 14px; cursor: pointer; white-space: nowrap;
+    font-family: inherit; transition: background .15s;
+  }
+  .demo-btn:hover { background: #f3f4f6; }
+  .score-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+  .strength-label { font-size: 20px; font-weight: 500; }
+  .grade-label { font-size: 13px; color: #6b7280; margin-top: 3px; }
+  .score-circle {
+    width: 58px; height: 58px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column; border: 3px solid;
+    font-size: 20px; font-weight: 500; flex-shrink: 0;
+  }
+  .score-circle .unit { font-size: 10px; opacity: .6; }
+  .bar-track { background: #f3f4f6; border-radius: 99px; height: 8px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 99px; transition: width .45s ease, background .45s ease; }
+  .metrics { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-bottom: 1rem; }
+  @media(max-width:540px){ .metrics { grid-template-columns: repeat(2,1fr); } }
+  .metric { background: #f3f4f6; border-radius: 8px; padding: .85rem 1rem; }
+  .metric-label { font-size: 12px; color: #6b7280; margin-bottom: 4px; }
+  .metric-value { font-size: 22px; font-weight: 500; color: #1a1a1a; line-height: 1.1; }
+  .metric-value.small { font-size: 14px; padding-top: 4px; line-height: 1.4; }
+  .metric-unit { font-size: 11px; color: #9ca3af; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 1rem; }
+  @media(max-width:500px){ .two-col { grid-template-columns: 1fr; } }
+  .two-col .card { margin-bottom: 0; }
+  .section-title {
+    font-size: 13px; font-weight: 500; color: #1a1a1a;
+    margin-bottom: .85rem; display: flex; align-items: center; gap: 6px;
+  }
+  .section-title i { font-size: 16px; color: #6b7280; }
+  .check-row { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #1a1a1a; margin-bottom: 7px; }
+  .check-row:last-child { margin-bottom: 0; }
+  .check-row i { font-size: 16px; flex-shrink: 0; }
+  .tip-row { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; color: #374151; margin-bottom: 7px; }
+  .tip-row:last-child { margin-bottom: 0; }
+  .tip-row i { font-size: 14px; flex-shrink: 0; margin-top: 3px; color: #6b7280; }
+  .placeholder { text-align: center; padding: 2.5rem 1rem; color: #9ca3af; font-size: 14px; }
+  .placeholder i { font-size: 36px; display: block; margin-bottom: .75rem; opacity: .4; }
+  .footer { text-align: center; margin-top: 2rem; font-size: 12px; color: #9ca3af; }
+  .footer a { color: #1a7ef0; text-decoration: none; }
+  .footer a:hover { text-decoration: underline; }
+  .color-danger  { color: #dc2626; }
+  .color-warning { color: #ea580c; }
+  .color-info    { color: #2563eb; }
+  .color-success { color: #16a34a; }
+  .color-teal    { color: #0891b2; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <div class="header-wrap">
+      <i class="ti ti-shield-lock"></i>
+      <h1>Password Strength Analyzer</h1>
+    </div>
+    <p>by Fatih Bilekyigit &nbsp;·&nbsp; Codemasters 2026</p>
+  </div>
+
+  <div class="card">
+    <label class="input-label" for="pwInput">Enter a password to analyze</label>
+    <div class="input-row">
+      <div class="input-wrap">
+        <input type="password" id="pwInput" placeholder="Type a password..." autocomplete="off" oninput="analyze()" />
+        <button class="eye-btn" onclick="toggleVis()" aria-label="Show/hide">
+          <i class="ti ti-eye" id="eyeIcon"></i>
+        </button>
+      </div>
+      <button class="demo-btn" onclick="runDemo()">
+        <i class="ti ti-player-play" style="vertical-align:-2px; margin-right:4px;"></i>Demo
+      </button>
+    </div>
+  </div>
+
+  <div id="placeholder" class="placeholder">
+    <i class="ti ti-keyboard"></i>
+    Start typing a password above to see your analysis
+  </div>
+
+  <div id="results" style="display:none;">
+    <div class="card">
+      <div class="score-top">
+        <div>
+          <div class="strength-label" id="strengthLabel"></div>
+          <div class="grade-label" id="gradeLabel"></div>
+        </div>
+        <div class="score-circle" id="scoreCircle">
+          <span id="scoreNum"></span>
+          <span class="unit">/10</span>
+        </div>
+      </div>
+      <div class="bar-track"><div class="bar-fill" id="scoreBar"></div></div>
+    </div>
+
+    <div class="metrics">
+      <div class="metric">
+        <div class="metric-label">Length</div>
+        <div class="metric-value" id="statLen"></div>
+        <div class="metric-unit">characters</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Entropy</div>
+        <div class="metric-value" id="statEnt"></div>
+        <div class="metric-unit">bits</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Crack time (GPU)</div>
+        <div class="metric-value small" id="statCrack"></div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Char types</div>
+        <div class="metric-value" id="statTypes"></div>
+        <div class="metric-unit">out of 4</div>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div class="card">
+        <div class="section-title"><i class="ti ti-checklist"></i> Character checks</div>
+        <div id="charChecks"></div>
+      </div>
+      <div class="card">
+        <div class="section-title"><i class="ti ti-search"></i> Pattern analysis</div>
+        <div id="patterns"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title"><i class="ti ti-bulb"></i> Security advice</div>
+      <div id="tips"></div>
+    </div>
+  </div>
+
+  <div class="footer">
+    Built with Python (Flask) &nbsp;·&nbsp;
+    <a href="https://linkedin.com/in/fatihbilekyigit" target="_blank">linkedin.com/in/fatihbilekyigit</a>
+    &nbsp;·&nbsp; Eindhoven, Netherlands
+  </div>
+</div>
+
+<script>
+const demos = ['123456', 'Summer2024', 'Coffee!Jazz#Utrecht2026'];
+let demoIdx = 0, showPw = false;
+
+const colorMap = {
+  danger:  '#dc2626',
+  warning: '#ea580c',
+  info:    '#2563eb',
+  success: '#16a34a',
+  teal:    '#0891b2',
+};
+
+function toggleVis() {
+  const inp = document.getElementById('pwInput');
+  showPw = !showPw;
+  inp.type = showPw ? 'text' : 'password';
+  document.getElementById('eyeIcon').className = showPw ? 'ti ti-eye-off' : 'ti ti-eye';
+}
+
+function runDemo() {
+  const inp = document.getElementById('pwInput');
+  inp.value = demos[demoIdx++ % demos.length];
+  inp.type = 'text'; showPw = true;
+  document.getElementById('eyeIcon').className = 'ti ti-eye-off';
+  analyze();
+}
+
+function analyze() {
+  const pw = document.getElementById('pwInput').value;
+  document.getElementById('placeholder').style.display = pw ? 'none' : 'block';
+  document.getElementById('results').style.display    = pw ? 'block' : 'none';
+  if (!pw) return;
+
+  // 🐍 Python'a gönder — Flask /analyze endpoint
+  fetch('/analyze', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ password: pw })
+  })
+  .then(r => r.json())
+  .then(d => renderResult(d))
+  .catch(e => console.error(e));
+}
+
+function renderResult(d) {
+  const color = colorMap[d.level] || '#6b7280';
+
+  document.getElementById('strengthLabel').textContent = d.label;
+  document.getElementById('strengthLabel').style.color = color;
+  document.getElementById('gradeLabel').textContent    = 'Grade: ' + d.grade;
+  document.getElementById('scoreNum').textContent      = d.score;
+  const circ = document.getElementById('scoreCircle');
+  circ.style.color = color; circ.style.borderColor = color;
+  document.getElementById('scoreBar').style.width      = (d.score / 10 * 100) + '%';
+  document.getElementById('scoreBar').style.background = color;
+
+  document.getElementById('statLen').textContent   = d.length;
+  document.getElementById('statEnt').textContent   = d.entropy;
+  document.getElementById('statCrack').textContent = d.crack_time;
+  document.getElementById('statTypes').textContent = d.char_types;
+
+  document.getElementById('charChecks').innerHTML =
+    d.char_checks.map(c => checkRow(c.ok, c.text)).join('');
+
+  document.getElementById('patterns').innerHTML =
+    d.patterns.map(c => checkRow(c.ok, c.text)).join('');
+
+  document.getElementById('tips').innerHTML =
+    d.tips.map(t =>
+      `<div class="tip-row"><i class="ti ti-point-filled"></i><span>${t}</span></div>`
+    ).join('');
+}
+
+function checkRow(ok, lbl) {
+  const c = ok ? '#16a34a' : '#dc2626';
+  const i = ok ? 'ti-circle-check' : 'ti-circle-x';
+  return `<div class="check-row"><i class="ti ${i}" style="color:${c};"></i><span>${lbl}</span></div>`;
+}
+</script>
+</body>
+</html>
